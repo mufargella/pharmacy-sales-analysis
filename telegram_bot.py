@@ -80,19 +80,33 @@ def total_revenue_format(val):
 # دالة إرسال الرسالة إلى تليجرام
 # ----------------------------------------------------
 async def send_telegram_message(text):
-    # قراءة التوكن والـ Chat ID من متغيرات البيئة
+    # قراءة التوكن والـ Chat ID من متغيرات البيئة أو الملف المحفوظ
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID")
     
     if not token or not chat_id:
-        print("\n=== [MOCK MODE] لم يتم العثور على TELEGRAM_BOT_TOKEN أو TELEGRAM_CHAT_ID ===")
+        import json
+        config_file = 'telegram_config.json'
+        if os.path.exists(config_file):
+            try:
+                with open(config_file, 'r', encoding='utf-8') as f:
+                    config_data = json.load(f)
+                    token = token or config_data.get('token')
+                    chat_id = chat_id or config_data.get('chat_id')
+            except Exception:
+                pass
+                
+    if not token or not chat_id:
+        print("\n=== [MOCK MODE] لم يتم العثور على إعدادات البوت في ملف الإعدادات أو متغيرات البيئة ===")
         print("سيتم طباعة رسالة التقرير هنا كمعاينة للبوت:\n")
         print(text)
         print("========================================================================\n")
-        print("ℹ️ لإرسال التقرير فعلياً إلى تليجرام، قم بضبط متغيرات البيئة وتشغيل السكربت:")
-        print("   $env:TELEGRAM_BOT_TOKEN='your_token'")
-        print("   $env:TELEGRAM_CHAT_ID='your_chat_id'")
-        print("   python telegram_bot.py")
+        print("ℹ️ لإرسال التقرير فعلياً إلى تليجرام، يمكنك:")
+        print("   1. حفظ الإعدادات من لوحة التحكم (Streamlit Dashboard).")
+        print("   2. أو ضبط متغيرات البيئة وتشغيل السكربت:")
+        print("      $env:TELEGRAM_BOT_TOKEN='your_token'")
+        print("      $env:TELEGRAM_CHAT_ID='your_chat_id'")
+        print("      python telegram_bot.py")
         return False
         
     try:

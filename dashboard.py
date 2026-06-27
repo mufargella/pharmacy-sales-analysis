@@ -357,6 +357,20 @@ with tab3:
 with tab4:
     st.markdown("<div class='tab-header'>أتمتة وإرسال التقارير التلقائية عبر تليجرام</div>", unsafe_allow_html=True)
     
+    # تحميل الإعدادات المحفوظة إن وجدت
+    import json
+    config_file = 'telegram_config.json'
+    saved_token = ""
+    saved_chat_id = ""
+    if os.path.exists(config_file):
+        try:
+            with open(config_file, 'r', encoding='utf-8') as f:
+                config_data = json.load(f)
+                saved_token = config_data.get('token', '')
+                saved_chat_id = config_data.get('chat_id', '')
+        except Exception:
+            pass
+
     col_t1, col_t2 = st.columns([2, 3])
     
     with col_t1:
@@ -367,12 +381,26 @@ with tab4:
         2. ابحث عن البوت **@userinfobot** أو **@GetChatID_Bot** لمعرفة الـ **Chat ID** الخاص بك أو بمجموعتك.
         """)
         
-        # حقول إدخال سرية
-        bot_token_input = st.text_input("رمز البوت (Telegram Bot Token)", type="password", help="مثال: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ")
-        chat_id_input = st.text_input("معرف المحادثة (Telegram Chat ID)", type="default", help="مثال: 987654321 أو معرف المجموعة -100123456789")
+        # حقول إدخال سرية مع تعبئة تلقائية من الإعدادات المحفوظة
+        bot_token_input = st.text_input("رمز البوت (Telegram Bot Token)", value=saved_token, type="password", help="مثال: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ")
+        chat_id_input = st.text_input("معرف المحادثة (Telegram Chat ID)", value=saved_chat_id, type="default", help="مثال: 987654321 أو معرف المجموعة -100123456789")
         
-        # زر الإرسال
-        send_report_btn = st.button("🚀 إرسال تقرير اختبار الآن إلى تليجرام")
+        # أزرار الإجراءات
+        col_btn1, col_btn2 = st.columns(2)
+        with col_btn1:
+            send_report_btn = st.button("🚀 إرسال تقرير الآن")
+        with col_btn2:
+            save_config_btn = st.button("💾 حفظ الإعدادات")
+            
+        if save_config_btn:
+            try:
+                with open(config_file, 'w', encoding='utf-8') as f:
+                    json.dump({'token': bot_token_input, 'chat_id': chat_id_input}, f, ensure_ascii=False)
+                st.success("✅ تم حفظ الإعدادات بنجاح!")
+                # إعادة تشغيل الواجهة لتحديث القيم الافتراضية
+                st.rerun()
+            except Exception as ex:
+                st.error(f"❌ فشل حفظ الإعدادات: {ex}")
         
     with col_t2:
         st.subheader("📝 معاينة التقرير المرسل (Preview)")
