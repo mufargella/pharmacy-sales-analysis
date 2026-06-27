@@ -362,12 +362,16 @@ with tab4:
     config_file = 'telegram_config.json'
     saved_token = ""
     saved_chat_id = ""
+    saved_enabled = False
+    saved_interval = 1440
     if os.path.exists(config_file):
         try:
             with open(config_file, 'r', encoding='utf-8') as f:
                 config_data = json.load(f)
                 saved_token = config_data.get('token', '')
                 saved_chat_id = config_data.get('chat_id', '')
+                saved_enabled = config_data.get('enabled', False)
+                saved_interval = int(config_data.get('interval_minutes', 1440))
         except Exception:
             pass
 
@@ -385,6 +389,11 @@ with tab4:
         bot_token_input = st.text_input("رمز البوت (Telegram Bot Token)", value=saved_token, type="password", help="مثال: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ")
         chat_id_input = st.text_input("معرف المحادثة (Telegram Chat ID)", value=saved_chat_id, type="default", help="مثال: 987654321 أو معرف المجموعة -100123456789")
         
+        st.markdown("---")
+        st.subheader("📅 أتمتة الإرسال التلقائي (Daemon)")
+        enable_scheduler = st.checkbox("🔄 تفعيل الإرسال التلقائي الدوري", value=saved_enabled, help="إذا تم التفعيل، سيقوم السيرفر بإرسال التقارير بشكل دوري في الخلفية تلقائياً")
+        interval_input = st.number_input("الفترة الزمنية بين التقارير (بالدقائق)", min_value=1, value=saved_interval, help="مثال: 1440 دقيقة تعادل 24 ساعة، و 5 دقائق للتجربة السريعة")
+
         # أزرار الإجراءات
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
@@ -395,9 +404,13 @@ with tab4:
         if save_config_btn:
             try:
                 with open(config_file, 'w', encoding='utf-8') as f:
-                    json.dump({'token': bot_token_input, 'chat_id': chat_id_input}, f, ensure_ascii=False)
-                st.success("✅ تم حفظ الإعدادات بنجاح!")
-                # إعادة تشغيل الواجهة لتحديث القيم الافتراضية
+                    json.dump({
+                        'token': bot_token_input, 
+                        'chat_id': chat_id_input,
+                        'enabled': enable_scheduler,
+                        'interval_minutes': interval_input
+                    }, f, ensure_ascii=False)
+                st.success("✅ تم حفظ الإعدادات بنجاح وتحديث المجدول!")
                 st.rerun()
             except Exception as ex:
                 st.error(f"❌ فشل حفظ الإعدادات: {ex}")
